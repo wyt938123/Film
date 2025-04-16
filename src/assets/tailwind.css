@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* 快速开发：
+
+无需在 HTML 和 CSS 文件之间切换，直接在 class 中写样式。
+
+响应式设计：
+
+提供响应式类名（如 sm:、md:、lg:），方便实现响应式布局。 */
