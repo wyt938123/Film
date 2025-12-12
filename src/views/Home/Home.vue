@@ -60,7 +60,7 @@
                         <van-icon name="arrow" size="1rem" class="ml-1" />
                     </span>
                 </div>
-                <PopularVideosCard :items="popularVideosState"></PopularVideosCard>
+                <!-- <PopularVideosCard :items="popularVideosState"></PopularVideosCard> -->
             </section>
             <!-- 影视 -->
             <section>
@@ -85,7 +85,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia';
 import { useHomeStore } from '@/stores/homeStore';
 import PopularVideosCard from '@/components/Home/PopularVideosCard.vue';
-import CommonVideosCard from '@/components/Home/CommonVideosCard.vue';
+import CommonVideosCard from '@/components/Home/CommonVideosCardccopy.vue';
 
 
 const searchField = ref('')

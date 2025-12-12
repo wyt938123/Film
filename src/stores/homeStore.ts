@@ -129,6 +129,114 @@ export const useHomeStore = defineStore('home',()=>{
             title: '东方英雄拯救世界',
             msg: '9.6',
             img: 'https://puui.qpic.cn/vcover_vt_pic/0/zr5a67l333ehzu91574817414/0?max_age=7776000'
+        },
+         {
+            name: '斗破苍穹',
+            title: '萧炎升斗尊!异火毁天灭地',
+            msg: '更新至133集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020027yzd9e1723195259313/0?max_age=7776000'
+        },
+        {
+            name: '功夫熊猫',
+            title: '时隔八年重榜归来',
+            msg: '9.4',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200n8j0p5f1706242586720/0?max_age=7776000'
+        },
+        {
+            name: '误判',
+            title: '甄子丹正义厮杀拳拳到肉',
+            msg: '9.2',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200shxravh1737726102985/0?max_age=7776000'
+        },
+        {
+            name: '奇妙萌可之魔法甜心',
+            title: '快加入捕捉甜心的新旅程',
+            msg: '全26集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020065woy041732699865355/0?max_age=7776000'
+        },
+        {
+            name: '老枪',
+            title: '老枪：全面瓦解',
+            msg: '9.3',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020088jtn3y1738723345694/0?max_age=7776000'
+        },
+        {
+            name: '剑来',
+            title: '天行健，君子以自强不息',
+            msg: '全26集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020072zgk611721874669799/0?max_age=7776000'
+        },
+        {
+            name: '假爸爸',
+            title: '贾冰伊正假冒父子组团捞钱',
+            msg: '8.8',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200pa18nf91738044757094/0?max_age=7776000'
+        },
+        {
+            name: '小小的我',
+            title: '易烊千玺饰演脑瘫患者',
+            msg: '9.3',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc002006a6qthq1733721799297/0?max_age=7776000'
+        },
+        {
+            name: '哪吒之魔童降世',
+            title: '东方英雄拯救世界',
+            msg: '9.6',
+            img: 'https://puui.qpic.cn/vcover_vt_pic/0/zr5a67l333ehzu91574817414/0?max_age=7776000'
+        },
+         {
+            name: '斗破苍穹',
+            title: '萧炎升斗尊!异火毁天灭地',
+            msg: '更新至133集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020027yzd9e1723195259313/0?max_age=7776000'
+        },
+        {
+            name: '功夫熊猫',
+            title: '时隔八年重榜归来',
+            msg: '9.4',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200n8j0p5f1706242586720/0?max_age=7776000'
+        },
+        {
+            name: '误判',
+            title: '甄子丹正义厮杀拳拳到肉',
+            msg: '9.2',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200shxravh1737726102985/0?max_age=7776000'
+        },
+        {
+            name: '奇妙萌可之魔法甜心',
+            title: '快加入捕捉甜心的新旅程',
+            msg: '全26集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020065woy041732699865355/0?max_age=7776000'
+        },
+        {
+            name: '老枪',
+            title: '老枪：全面瓦解',
+            msg: '9.3',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020088jtn3y1738723345694/0?max_age=7776000'
+        },
+        {
+            name: '剑来',
+            title: '天行健，君子以自强不息',
+            msg: '全26集',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc0020072zgk611721874669799/0?max_age=7776000'
+        },
+        {
+            name: '假爸爸',
+            title: '贾冰伊正假冒父子组团捞钱',
+            msg: '8.8',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc00200pa18nf91738044757094/0?max_age=7776000'
+        },
+        {
+            name: '小小的我',
+            title: '易烊千玺饰演脑瘫患者',
+            msg: '9.3',
+            img: 'https://vcover-vt-pic.puui.qpic.cn/vcover_vt_pic/0/mzc002006a6qthq1733721799297/0?max_age=7776000'
+        },
+        {
+            name: '哪吒之魔童降世',
+            title: '东方英雄拯救世界',
+            msg: '9.6',
+            img: 'https://puui.qpic.cn/vcover_vt_pic/0/zr5a67l333ehzu91574817414/0?max_age=7776000'
         }
     ])
         

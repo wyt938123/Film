@@ -29,8 +29,6 @@ const estimateHeight = ref(100) // 预估每个元素高度
 const itemPositions = ref<{ index: number; top: number; bottom: number; height: number }[]>([]) // 每个元素的位置信息  ----- 核心数据
 
 
-
-
 const visibleInfo = reactive({  // 可见区域信息
     startIndex: 0,
     endIndex: 0,

@@ -15,7 +15,7 @@ const rootRoutes :RouteRecordRaw[] = [
             title: '首页',
             cache:true
         },
-        component: () => import('@/views/Home/Home2.vue')
+        component: () => import('@/views/Home/Home.vue')
     },
     {
         path: 'assistant',
