@@ -27,10 +27,10 @@ interface Props {
     // { type: Number; default: 100 } | 100   vue2
    estimateHeight?: number,
    itemDate: CommonVideosItem[];
-
+    buffer?: number;
 }
 const props = defineProps<Props>();
-
+const buffer = props.buffer ?? 5;
 
 //这个index十分重要，作为每个dom的标识 
 //数据肯定是接口来的，这里为了测试先用假数据代替
@@ -68,7 +68,7 @@ onMounted(()=>{
     visibleInfo.height = containerRef.value?.clientHeight || 0;
     phantomHeight.value = itemDate.length * estimateHeight.value;
     visibleInfo.startIndex = 0;
-    visibleInfo.count = Math.ceil(visibleInfo.height / estimateHeight.value);     //导致每次固定截取x个元素，可以优化缓冲区？？
+    visibleInfo.count = Math.ceil(visibleInfo.height / estimateHeight.value)+buffer;     //导致每次固定截取x个元素，可以优化缓冲区？？
     visibleInfo.endIndex = visibleInfo.startIndex + visibleInfo.count;
     // itemPositions.value = itemDate.reduce((acc, item, index) => {
     //     acc[index] = {
@@ -127,9 +127,9 @@ function ScrollEvent(e: Event) {
     const scrollTop = target?.scrollTop ?? containerRef.value?.scrollTop ?? 0;
 
     // 根据 scrollTop 计算 startIndex 和 endIndex
-    visibleInfo.startIndex = getStartIndex(scrollTop)-1;          //高度设置的可能有问题
+    visibleInfo.startIndex = Math.max(getStartIndex(scrollTop)-1-buffer,0);          //高度设置的可能有问题
     console.log('visibleInfo.startIndex', visibleInfo.startIndex);
-    visibleInfo.endIndex = visibleInfo.startIndex + visibleInfo.count;
+    visibleInfo.endIndex = Math.min(visibleInfo.startIndex + visibleInfo.count+buffer, itemDate.length);
     getScrollTop();
     console.log('scrollTop', offSetY.value);
 }

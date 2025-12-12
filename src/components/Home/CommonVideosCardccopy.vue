@@ -1,6 +1,6 @@
 <template>
     <div class="contaner px-6 h-full">
-        <Loading :item-date="props.items"></Loading>
+        <Loading :item-date="props.items" :buffer = '5'></Loading>
     </div>
 </template>
 
