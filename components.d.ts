@@ -16,8 +16,14 @@ declare module 'vue' {
     Start: typeof import('./src/components/Assistant/Start.vue')['default']
     TabBar: typeof import('./src/components/Home/TabBar.vue')['default']
     UserQuery: typeof import('./src/components/AI/UserQuery.vue')['default']
+    VanButton: typeof import('vant/es')['Button']
+    VanCard: typeof import('vant/es')['Card']
+    VanDivider: typeof import('vant/es')['Divider']
     VanIcon: typeof import('vant/es')['Icon']
+    VanTab: typeof import('vant/es')['Tab']
     VanTabbar: typeof import('vant/es')['Tabbar']
     VanTabbarItem: typeof import('vant/es')['TabbarItem']
+    VanTabs: typeof import('vant/es')['Tabs']
+    VanTag: typeof import('vant/es')['Tag']
   }
 }
