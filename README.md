@@ -9,3 +9,9 @@ visibleInfo.startIndex = getStartIndex(scrollTop)-1;          //高度设置的�
 
 ### 添加缓冲区
 增加截取的info就可以了，偏移量还是真实的
+
+
+
+## 文件上传
+
+### 不使用webworker的版本

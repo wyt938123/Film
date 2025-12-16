@@ -47,6 +47,55 @@ const rootRoutes :RouteRecordRaw[] = [
 
 ]
 
+// 独立页面路由（不在 tabbar 下）
+const standaloneRoutes: RouteRecordRaw[] = [
+    {
+        path: '/download',
+        name: 'Download',
+        meta: {
+            title: '下载管理',
+            cache: false
+        },
+        component: () => import('@/views/Mine/Menu/Upload.vue')
+    },
+    {
+        path: '/playlist',
+        name: 'Playlist',
+        meta: {
+            title: '我的片单',
+            cache: false
+        },
+        component: () => import('@/views/Mine/Menu/Upload.vue')
+    },
+    {
+        path: '/collection',
+        name: 'Collection',
+        meta: {
+            title: '我的收藏',
+            cache: false
+        },
+        component: () => import('@/views/Mine/Menu/Upload.vue')
+    },
+    {
+        path: '/upload',
+        name: 'Upload',
+        meta: {
+            title: '上传视频',
+            cache: false
+        },
+        component: () => import('@/views/Mine/Menu/Upload.vue')
+    },
+    {
+        path: '/upload-file',
+        name: 'UploadFile',
+        meta: {
+            title: '上传视频',
+            cache: false
+        },
+        component: () => import('@/views/Mine/Menu/UploadFile.vue')
+    }
+]
+
 const routes :RouteRecordRaw[] = [
     {
         path: '/',
@@ -61,7 +110,8 @@ const routes :RouteRecordRaw[] = [
         path:'/login',
         name: 'Login',
         component: () => import('@/views/Login.vue'),
-    }
+    },
+    ...standaloneRoutes
 ]
 
 const router = createRouter({

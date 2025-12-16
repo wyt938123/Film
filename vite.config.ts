@@ -18,5 +18,15 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
+  },
+  server: {
+    fs: {
+      allow: [
+        // 允许访问项目根目录
+        path.resolve(__dirname),
+        // 允许访问 D 盘根目录的 node_modules
+        'D:/node_modules'
+      ]
+    }
   }
 })

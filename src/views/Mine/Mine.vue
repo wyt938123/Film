@@ -31,8 +31,10 @@
             <!-- 菜单栏 -->
             <section class="rounded-xl mt-[1rem] pb-[0.5rem] shadow-md bg-gray-90 mx-2 border">
                 <div class="topbar flex justify-around mt-[1.5rem]">
-                    <div class="topbar-item flex flex-col items-center" v-for="item in barItems.slice(0, 4)"
-                        :key="item.name">
+                    <div class="topbar-item flex flex-col items-center cursor-pointer" 
+                        v-for="item in barItems.slice(0, 5)"
+                        :key="item.name"
+                        @click="handleItemClick(item)">
                         <div class="topbar-item__icon">
                             <van-icon class="iconfont text-[1.5rem]" color="#000000" class-prefix="icon" :size="20"
                                 :name="item.icon" />
@@ -57,7 +59,7 @@
             <!-- 功能列表 -->
             <div class="function-box rounded-xl py-2 pl-4 pt-4 shadow-md bg-gray-90 mx-2 mt-3 border relative">
                 <section
-                    v-for="item in barItems.slice(4, 9)"
+                    v-for="item in barItems.slice(5, 10)"
                     :key="item.name"
                     class="flex items-center justify-between h-16 border-b border-gray-100 last:border-b-0 pr-4"
                 >
@@ -90,8 +92,18 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { useMineStore } from '@/stores/mineStore';
+import { useRouter } from 'vue-router';
+import type { MineBarItem } from '@/types/mine';
+
 const mineStore = useMineStore();
 const { barItems } = storeToRefs(mineStore);
+const router = useRouter();
+
+const handleItemClick = (item: MineBarItem) => {
+    if (item.route) {
+        router.push(item.route);
+    }
+};
 </script>
 
 <style scoped>

@@ -1,6 +1,7 @@
 <template>
     <div class="contaner px-6 h-full">
         <wc-waterfall :gap="20" :cols="2">
+            <!-- 把一个默认插槽传入 -->
             <div class="card boder rounded-lg shadow-lg" v-for="item in items" :key="item.name">
                 <img v-lazy="item.img" alt="" class="rounded-lg">
                 <div class="text">

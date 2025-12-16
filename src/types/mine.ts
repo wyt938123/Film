@@ -1,6 +1,7 @@
 export type MineBarItem = {
     name: string;
     icon: string;
+    route?: string;
 }
 
 export interface UserInfo {

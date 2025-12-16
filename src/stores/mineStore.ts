@@ -11,15 +11,23 @@ export const useMineStore = defineStore("mine", ()=> {
         },
         {
             name: '下载',
-            icon: 'download-1-copy'
+            icon: 'download-1-copy',
+            route: '/download'
         },
         {
             name: '片单',
-            icon: 'piandan'
+            icon: 'piandan',
+            route: '/playlist'
         },
         {
             name: '收藏',
-            icon: 'shoucang'
+            icon: 'shoucang',
+            route: '/collection'
+        },
+        {
+            name: '上传视频',
+            icon: 'shoucang',
+            route: '/upload'
         },
         {
             name: '我的金币',
