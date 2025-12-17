@@ -10,8 +10,14 @@
             <!-- 上传区域 -->
             <div class="upload-drag bg-white rounded-lg border-2 border-dashed border-gray-300 p-12 text-center cursor-pointer hover:border-blue-400 transition-colors"
                 @click="handleClick">
-                <input type="file" ref="fileInput" @change="handleUploadFile" accept="" multiple="false"
-                    style="display: none" />
+
+                <input type="file" 
+                ref="fileInput" 
+                @change="handleUploadFile" 
+                accept="" 
+                multiple="false"
+                style="display: none" />
+        
                 <div class="flex flex-col items-center justify-center">
                     <van-icon name="upgrade" size="50" color="#c0c4cc" />
                     <p class="mt-4 text-gray-500">点击选择视频文件</p>
@@ -65,14 +71,15 @@ const chunkSize = 1 * 1024 * 1024; // 1MB 分片大小
 const uploadFileList = ref<UploadFile[]>([]);  // 上传文件列表
 
 interface ChunkItem {
-    fileHash: string;
-    fileSize: number;
-    fileName: string;
-    index: number;
-    chunkFile: Blob;
-    chunkHash: string;
-    chunkSize: number;
-    chunkNumber: number;
+    fileHash: string; // 总文件hash
+    fileSize: number; // 总文件size
+    fileName: string;// 总文件name
+    index: number; 
+    
+    chunkFile: Blob;  // 切片文件本身
+    chunkHash: string;  // 单个切片hash,以 - 连接
+    chunkSize: number; // 切片文件大小
+    chunkNumber: number; // 切片个数
     finish: boolean;
 }
 
@@ -81,11 +88,11 @@ interface UploadFile {
     fileHash: string;
     fileName?: string;
     fileSize?: number;
-    allChunkList?: ChunkItem[];
-    whileUploadingChunkList?: any[];
-    percentage: number;
-    finishNumber?: number;
-    errNumber?: number;
+    allChunkList?: ChunkItem[]; // 所有请求分片列表
+    whileUploadingChunkList?: any[];  // 正在上传的分片列表
+    percentage: number; // 上传进度百分比
+    finishNumber?: number; // 已完成分片数量
+    errNumber?: number; // 失败分片数量
     state: number; // 0:待处理 1:解析中 2:上传中 3:完成 4:失败
 }
 
@@ -111,11 +118,11 @@ const handleUploadFile = async (event: Event) => {
             fileHash: '',
             fileName: file.name,
             fileSize: file.size,
-            allChunkList: [], // 所以请求分片列表
-            whileUploadingChunkList: [], // 正在上传的分片列表
-            percentage: 0, // 上传进度百分比
-            finishNumber: 0, // 已完成分片数量
-            errNumber: 0 // 失败分片数量
+            allChunkList: [], 
+            whileUploadingChunkList: [], 
+            percentage: 0, 
+            finishNumber: 0, 
+            errNumber: 0 
         }
         uploadFileList.value.push(inTackArrItem);
         inTackArrItem.state = 1; // 解析中
@@ -145,28 +152,27 @@ const handleUploadFile = async (event: Event) => {
 
         //为了保障实现进度条，以及切片需要的信息
         inTackArrItem.allChunkList = fileChunkList.map((chunk, index) => {return {
-            // 总文件hash
             fileHash: `${fileHash}${baseName}`,
-            // 总文件size
+            
             fileSize: file.size,
-            // 总文件name
+            
             fileName: file.name,
             index: index,
-            // 切片文件本身
+            
             chunkFile: chunk.chunkFile,
-            // 单个切片hash,以 - 连接
+            
             chunkHash: `${fileHash}-${index}`,
-            // 切片文件大小
+            
             chunkSize: chunk.chunkFile.size,
-            // 切片个数
+            
             chunkNumber: fileChunkList.length,
             // 切片是否已经完成
             finish: false,
           }
 
         });
-
-        // 开始上传
+        console.log('切片列表', inTackArrItem.allChunkList);
+        // 开始上传  --- 需要上传文件信息作为对象传入
         uploadSignleFile(inTackArrItem);
     });
 };
@@ -197,14 +203,14 @@ const uploadSignleFile = async function(uploadFile: UploadFile) {
     
     console.log('初始化上传任务，最大并发数:', maxConcurrent, '总分片数:', allChunkList.length);
     
-    // 上传单个分片
+    // 上传单个分片 ---- 并且更新进度
     const uploadChunk = async (chunk: ChunkItem): Promise<void> => {
         try {
             console.log(`开始上传分片 ${chunk.index + 1}/${chunk.chunkNumber}`);
             
             // 创建 FormData
             const formData = new FormData();
-            formData.append('file', chunk.chunkFile);
+            formData.append('file', chunk.chunkFile);  //切片数据
             formData.append('fileHash', chunk.fileHash);
             formData.append('chunkHash', chunk.chunkHash);
             formData.append('fileName', chunk.fileName);
@@ -215,6 +221,8 @@ const uploadSignleFile = async function(uploadFile: UploadFile) {
             const response = await fetch('http://localhost:3000/upload/chunk', {
                 method: 'POST',
                 body: formData
+                //// ❌ 注意：不要手动设置 Content-Type！浏览器会自动添加正确的 multipart/form-data 及边界符
+                 // "Content-Type": "multipart/form-data" // 错误写法
             });
             
             const result = await response.json();
@@ -245,9 +253,9 @@ const uploadSignleFile = async function(uploadFile: UploadFile) {
 
     // 并发上传控制
     const uploadNext = async (): Promise<void> => {
-        if (currentIndex >= allChunkList.length) return;
+        if (currentIndex > allChunkList.length-1) return;      //注意是length
         
-        const chunk = allChunkList[currentIndex];
+        const chunk = allChunkList[currentIndex];       //上传的切片
         currentIndex++;
         
         await uploadChunk(chunk);
@@ -268,8 +276,11 @@ const uploadSignleFile = async function(uploadFile: UploadFile) {
         
         // 检查是否所有分片都上传成功
         const allSuccess = allChunkList.every(chunk => chunk.finish);
+        //上传文件hash
         const uploadItem = uploadFileList.value.find(item => item.fileHash === uploadFile.fileHash);
         
+        //------------------------------------------------------------------------
+
         if (allSuccess && uploadFile.errNumber === 0 && uploadItem) {
             console.log('所有分片上传完成，开始合并...');
             
@@ -325,6 +336,7 @@ const uploadSignleFile = async function(uploadFile: UploadFile) {
 
 // 计算文件 hash 和分片
 const getHashAndChunk = function(file: File) {
+    // 仅针对「成功态（resolve）」，失败态（reject）不受泛型约束
     return new Promise<{ fileHash: string; fileChunkList: Array<{ chunkFile: Blob }> }>((resolve, reject) => {
         const chunkList: Array<{ chunkFile: Blob }> = [];
         const chunkCount = Math.ceil(file.size / chunkSize); // 总分片数
@@ -332,22 +344,26 @@ const getHashAndChunk = function(file: File) {
         const fileReader = new FileReader();
         let currentChunk = 0;
 
-        // 读取每个分片
+        // 读取每个分片 ----------------------   下面的逻辑仅是为了计算hash
         const loadNext = () => {
             const start = currentChunk * chunkSize;
             const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
+            // 、、1MB 大小的 Blob 对应的字节数是 1048576 字节
+            const chunk = file.slice(start, end);      //0-1MB 1-2MB 2-3MB 3-4MB  
             
             // 保存分片
             chunkList.push({ chunkFile: chunk });
             
-            fileReader.readAsArrayBuffer(chunk);
+            fileReader.readAsArrayBuffer(chunk);     // ->二进制
         };
 
         fileReader.onload = (e) => {
+            //e是成功读取的二进制数据的事件对象        ----currentChunk>=chunkCount 终止条件
+            //成功读取到了结果后
+            console.log(e,'读取分片结果对象');
             if (e.target?.result) {
                 // 追加到 MD5 计算
-                spark.append(e.target.result as ArrayBuffer);
+                spark.append(e.target.result as ArrayBuffer); //成功读取到的结果是 ArrayBuffer 类型 
                 currentChunk++;
 
                 if (currentChunk < chunkCount) {
