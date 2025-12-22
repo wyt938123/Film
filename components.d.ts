@@ -16,6 +16,8 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Start: typeof import('./src/components/Assistant/Start.vue')['default']
     TabBar: typeof import('./src/components/Home/TabBar.vue')['default']
+    UoloadProgressItem: typeof import('./src/components/Mine/Upload/UoloadProgressItem.vue')['default']
+    UploadArea: typeof import('./src/components/Mine/Upload/UploadArea.vue')['default']
     UserQuery: typeof import('./src/components/AI/UserQuery.vue')['default']
     VanButton: typeof import('vant/es')['Button']
     VanCard: typeof import('vant/es')['Card']

@@ -1,4 +1,7 @@
 <template>
+
+    <!-- https://github.com/huodoushigemi/wc-flow-layout.git -->
+
     <div ref="containerRef" class="w-full h-[1000px] bg-[#00ffff]  relative overflow-auto touch-auto"
         @scroll="ScrollEvent">
         <!-- .content 对应 Tailwind 样式 -->
@@ -137,7 +140,7 @@ function getScrollTop() {
         visibleInfo.startIndex >= 1 ? itemPositions.value[visibleInfo.startIndex].top : 0
 }
 // 查找第一个大于等于 scrollTop 的元素索引  -
-//
+// 这套仅适用于二分应用
 function getStartIndex(scrollTop: number): number {
     // 二分查找法确定 startIndex
     let low = 0;
