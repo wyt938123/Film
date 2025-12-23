@@ -18,6 +18,7 @@ declare module 'vue' {
     TabBar: typeof import('./src/components/Home/TabBar.vue')['default']
     UoloadProgressItem: typeof import('./src/components/Mine/Upload/UoloadProgressItem.vue')['default']
     UploadArea: typeof import('./src/components/Mine/Upload/UploadArea.vue')['default']
+    UploadProgressItem: typeof import('./src/components/Mine/Upload/UploadProgressItem.vue')['default']
     UserQuery: typeof import('./src/components/AI/UserQuery.vue')['default']
     VanButton: typeof import('vant/es')['Button']
     VanCard: typeof import('vant/es')['Card']

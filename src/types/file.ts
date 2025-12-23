@@ -12,6 +12,14 @@ export interface ChunkItem {
 
 
 
+export enum UploadState {
+    WAITING = 0,
+    PARSING = 1,
+    UPLOADING = 2,
+    SUCCESS = 3,
+    FAILURE = 4
+}
+
 export interface UploadFile {
     id?: number;
     fileHash: string;
@@ -22,5 +30,5 @@ export interface UploadFile {
     percentage: number; // 上传进度百分比
     finishNumber?: number; // 已完成分片数量
     errNumber?: number; // 失败分片数量
-    state: number; // 0:待处理 1:解析中 2:上传中 3:完成 4:失败
+    state: UploadState; // 状态
 }
