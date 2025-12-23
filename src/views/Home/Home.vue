@@ -60,7 +60,7 @@
                         <van-icon name="arrow" size="1rem" class="ml-1" />
                     </span>
                 </div>
-                <!-- <PopularVideosCard :items="popularVideosState"></PopularVideosCard> -->
+                <PopularVideosCard :items="popularVideosState"></PopularVideosCard>
             </section>
             <!-- 影视 -->
             <section>

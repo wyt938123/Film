@@ -2,8 +2,8 @@
 
     <!-- https://github.com/huodoushigemi/wc-flow-layout.git -->
 
-    <div ref="containerRef" class="w-full h-[1000px] bg-[#00ffff]  relative overflow-auto touch-auto"
-        @scroll="ScrollEvent">
+    <!-- 去掉容器的固定高度和 overflow-auto，让它自然撑开 -->
+    <div ref="containerRef" class="w-full min-h-screen bg-[#00ffff] relative">
         <!-- .content 对应 Tailwind 样式 -->
         <div :style="{ height: phantomHeight + 'px' }">
             <!-- .content-item 对应 Tailwind 样式 -->
@@ -80,7 +80,7 @@ const visibleInfo = reactive({  // 可见区域信息
 // 渲染可见数据
 const visibleData = computed(() => {
     return itemDate.value.slice(visibleInfo.startIndex,
-     Math.min(visibleInfo.endIndex, itemDate.value.length)
+        Math.min(visibleInfo.endIndex, itemDate.value.length)
     )
 })
 
@@ -91,7 +91,14 @@ const getTransform = computed(() => {
 
 onMounted(() => {
     if (!containerRef.value) return;
-    visibleInfo.height = containerRef.value?.clientHeight || 0;
+    // 使用视口高度作为可见区域高度
+    visibleInfo.height = window.innerHeight; //这里是整个window视口高度 --后续多渲染的作为缓冲区，防止留白
+
+    // visibleInfo.height = containerRef.value?.clientHeight || 0;
+    //造成“触底后加载的 DOM 数量远远超过 10 条”（实际上是渲染了所有数据）的根本原因是：
+    // 你在 onMounted 中错误地重置了 visibleInfo.height
+
+
     phantomHeight.value = itemDate.value.length * estimateHeight.value;
     visibleInfo.startIndex = 0;
     visibleInfo.count = Math.ceil(visibleInfo.height / estimateHeight.value) + buffer;     //导致每次固定截取x个元素，可以优化缓冲区？？
@@ -113,26 +120,29 @@ onMounted(() => {
             height: estimateHeight.value,
         }
     })
+    // 监听 window 滚动
+    window.addEventListener('scroll', handleWindowScroll, { passive: true });
+
 })
 
 watch(() => props.itemDate.length, (newLen, oldLen) => {
     nextTick(() => {
         // 当 itemDate 长度变化时，更新 itemPositions
-    if (newLen > oldLen) {
-        const oldLength = itemPositions.value.length;
-        for (let index = oldLength; index < newLen; index++) {
-            const lastBottom = itemPositions.value[oldLength - 1]?.bottom ?? 0;
-            itemPositions.value.push({
-                index,
-                top: lastBottom + (index - oldLength) * estimateHeight.value,
-                bottom: lastBottom + (index - oldLength + 1) * estimateHeight.value,
-                height: estimateHeight.value,
-            });
+        if (newLen > oldLen) {
+            const oldLength = itemPositions.value.length;
+            for (let index = oldLength; index < newLen; index++) {
+                const lastBottom = itemPositions.value[oldLength - 1]?.bottom ?? 0;
+                itemPositions.value.push({
+                    index,
+                    top: lastBottom + (index - oldLength) * estimateHeight.value,
+                    bottom: lastBottom + (index - oldLength + 1) * estimateHeight.value,
+                    height: estimateHeight.value,
+                });
+            }
+            phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom;
         }
-        phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom;
-    }
     });
-    
+
 });
 
 function getScrollTop() {
@@ -167,11 +177,38 @@ function getStartIndex(scrollTop: number): number {
 
 //用来更新 visibleInfo 信息的 ---》影响 visibleData ---》dom更新（渲染关系）
 
-function ScrollEvent(e: Event) {
-    // 安全地获取 scrollTop：优先用事件目标，再回退到容器引用
-    const target = e.target as HTMLElement | null;
-    const scrollTop = target?.scrollTop ?? containerRef.value?.scrollTop ?? 0;
 
+
+// 新增一个本地锁，用于解决 props 异步更新的时间差问题
+const isEmitting = ref(false);
+let emitTimer: number | null = null;
+
+watch(() => props.loading, (newVal) => {
+    loading.value = newVal;
+    // 当 loading 变为 false (请求结束) 时，解开本地锁
+    if (!newVal) {
+        isEmitting.value = false;
+    }
+});
+
+// ...existing code...
+
+
+
+
+
+
+function handleWindowScroll() {
+    if (!containerRef.value) return;
+    // 获取容器顶部相对于视口的位置
+
+
+
+    const rect = containerRef.value.getBoundingClientRect();
+    const containerTop = rect.top;
+    console.log('containerTop', containerTop);
+    // 当容器顶部滑出视口时，scrollTop 为正值 -- 其余逻辑照旧
+    const scrollTop = Math.max(0, -containerTop);
     // 根据 scrollTop 计算 startIndex 和 endIndex
     visibleInfo.startIndex = Math.max(getStartIndex(scrollTop) - 1 - buffer, 0);
     console.log('visibleInfo.startIndex', visibleInfo.startIndex);
@@ -180,16 +217,67 @@ function ScrollEvent(e: Event) {
     console.log('scrollTop', offSetY.value);
 
     // 触底加载检测
-    if (!containerRef.value || loading.value) return;
-    const scrollHeight = containerRef.value.scrollHeight;
-    const clientHeight = containerRef.value.clientHeight;
-    const distanceToBottom = scrollHeight - scrollTop - clientHeight;
-    
-    // 距离底部小于100px时触发加载
-    if (distanceToBottom < 10  && !loading.value) {
+    // if (!containerRef.value || loading.value) return;
+    // if (scrollTop > window.innerHeight) {
+        //只有在顶部时才触发加载更多
+        // const scrollHeight = containerRef.value.scrollHeight;
+        // const clientHeight = containerRef.value.clientHeight;
+        // const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+
+        // / ✅ 2. 只有触底加载时才检查锁 -- 不能
+    // 如果正在加载或刚触发过emit，跳过触底检测，但不影响上面的滚动计算
+    if (loading.value || isEmitting.value) return;
+
+
+        const distanceToBottom = containerRef.value.getBoundingClientRect().bottom - window.innerHeight;
+        console.log('distanceToBottom', distanceToBottom);
+
+        // 距离底部小于100px时触发加载
+         if (distanceToBottom < 200) {
+        console.log('触发加载更多');
+        
+        // 立即上锁
+        isEmitting.value = true;
         emit('getMoreData');
+        
+        // ✅ 添加超时解锁（兜底保护）
+        // 如果 3 秒后 props.loading 还没变化，强制解锁
+        emitTimer = window.setTimeout(() => {
+            if (isEmitting.value) {
+                console.log('超时解锁（props.loading 未更新）');
+                isEmitting.value = false;
+            }
+        }, 3000);
     }
+
+    // }
+
 }
+
+
+// function ScrollEvent(e: Event) {
+//     // 安全地获取 scrollTop：优先用事件目标，再回退到容器引用
+//     const target = e.target as HTMLElement | null;
+//     const scrollTop = target?.scrollTop ?? containerRef.value?.scrollTop ?? 0;
+
+//     // 根据 scrollTop 计算 startIndex 和 endIndex
+//     visibleInfo.startIndex = Math.max(getStartIndex(scrollTop) - 1 - buffer, 0);
+//     console.log('visibleInfo.startIndex', visibleInfo.startIndex);
+//     visibleInfo.endIndex = Math.min(visibleInfo.startIndex + visibleInfo.count + buffer, itemDate.value.length);
+//     getScrollTop();
+//     console.log('scrollTop', offSetY.value);
+
+//     // 触底加载检测
+//     if (!containerRef.value || loading.value) return;
+//     const scrollHeight = containerRef.value.scrollHeight;
+//     const clientHeight = containerRef.value.clientHeight;
+//     const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+
+//     // 距离底部小于100px时触发加载
+//     if (distanceToBottom < 10  && !loading.value) {
+//         emit('getMoreData');
+//     }
+// }
 // 根据渲染dom的变化，来修正 estimateHeight 和 itemPositions
 onUpdated(() => {
     if (!itemRefs.value.length) return
