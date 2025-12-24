@@ -3,18 +3,18 @@
     <!-- https://github.com/huodoushigemi/wc-flow-layout.git -->
 
     <!-- 去掉容器的固定高度和 overflow-auto，让它自然撑开 -->
-    <div ref="containerRef" class="w-full min-h-screen bg-[#00ffff] relative">
+    <div ref="containerRef" class="w-full min-h-screen bg-[#ffffff] relative">
         <!-- .content 对应 Tailwind 样式 -->
         <div :style="{ height: phantomHeight + 'px' }">
             <!-- .content-item 对应 Tailwind 样式 -->
 
         </div>
-        <div :style="{ transform: getTransform }" class="absolute left-0 top-0 w-full bg-yellow">
+        <div :style="{ transform: getTransform ,columnCount: props.cols ?? 1 ,gap: props.gap ?? 0 }" class="absolute left-0 top-0 w-full bg-yellow">
             <div v-for="item in visibleData" :key="item.index" ref="itemRefs" :id="String(item.index)"
                 class="box-border border border-[#ddd] text-center text-[#333]">
                 <!-- {{ item.img }} ✅ 显示文字内容 -->
                 <!-- <img :src="item.img" class="h-[100px] w-full object-cover block" /> -->
-                <img v-lazy="item.img" alt="" class="h-[100px] w-full object-cover block" />
+                <img v-lazy="item.img" alt="" class="h-[400px] w-full object-cover block" />
             </div>
         </div>
         <!-- 加载状态提示 -->
@@ -35,6 +35,8 @@ interface Props {
     itemDate: CommonVideosItem[];
     buffer?: number;
     loading: boolean;
+    gap?: number;
+    cols?: number;
 }
 
 const props = defineProps<Props>();
@@ -99,9 +101,9 @@ onMounted(() => {
     // 你在 onMounted 中错误地重置了 visibleInfo.height
 
 
-    phantomHeight.value = itemDate.value.length * estimateHeight.value;
+    phantomHeight.value = (itemDate.value.length * estimateHeight.value) / (props.cols ?? 1);
     visibleInfo.startIndex = 0;
-    visibleInfo.count = Math.ceil(visibleInfo.height / estimateHeight.value) + buffer;     //导致每次固定截取x个元素，可以优化缓冲区？？
+    visibleInfo.count = Math.ceil(visibleInfo.height / estimateHeight.value) * (props.cols ?? 1) + buffer;     //导致每次固定截取x个元素，可以优化缓冲区？？
     visibleInfo.endIndex = visibleInfo.startIndex + visibleInfo.count;
     // itemPositions.value = itemDate.reduce((acc, item, index) => {
     //     acc[index] = {
@@ -303,7 +305,7 @@ onUpdated(() => {
         }
     });
     //更新 phantomHeight
-    phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom;
+    phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom/ (props.cols ?? 1);
     //  getScrollTop();
 })
 

@@ -5,8 +5,10 @@
         :buffer='5' 
         :loading="loading" 
         @getMoreData="addData"
+        :gap="20" 
+        :cols="2"
         >
-
+        
     </Loading>
         <!-- 把一个默认插槽传入 -->
         
