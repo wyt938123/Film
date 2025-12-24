@@ -16,6 +16,9 @@ visibleInfo.startIndex = getStartIndex(scrollTop)-1;          //高度设置的�
 方案二：组件内部滚动但隐藏滚动条（仍可滚）
 方案三：用页面滚动，不让组件自己滚   -- 优
 
+多行渲染有很多种不同的方式
+
+
 
 
 ## 文件上传

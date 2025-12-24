@@ -17,7 +17,7 @@
                 <img v-lazy="item.img" alt="" class="h-[400px] w-full object-cover block" />
             </div>
         </div>
-        <!-- 加载状态提示 -->
+        <!-- 加载状态提示 应该是利用插槽传入-->
         <div v-if="loading" class="py-4 text-center">加载中...</div>
     </div>
 </template>
