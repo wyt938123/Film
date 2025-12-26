@@ -8,7 +8,14 @@
         :gap="20" 
         :cols="2"
         >
-        
+        <template #item = {item}>
+            <div class="card">
+                <img v-lazy="item.img" alt="" class="h-[400px] w-full object-cover block" />
+            </div>
+        </template>
+        <template #loading>
+            <van-loading size="24px">努力加载中...</van-loading>
+        </template>
     </Loading>
         <!-- 把一个默认插槽传入 -->
         
@@ -43,9 +50,9 @@ const addData = () => {
             });
         }
         props.items.push(...moreData);     //违背了props不可变原则，仅为模拟数据使用
-    }, 1500);
     loading.value = false;
-
+    }, 1500);
+    // loading.value = false;   --- 这里不能直接设置为false，因为setTimeout是异步的
 };
 </script>
 

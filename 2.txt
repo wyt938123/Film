@@ -1,0 +1,355 @@
+关键点说明
+ES6 引入：我们在 hash.worker.js 中使用了 import SparkMD5 from 'spark-md5'。这在现代浏览器和 Vite 构建系统中是完全支持的。
+Vite Worker 导入：使用 import MyWorker from './worker?worker' 是 Vite 处理 Worker 的标准方式。它会自动处理打包和路径问题，你不需要手动去 public 文件夹引用文件。
+类型安全：如果你使用 TypeScript，可能需要添加一个声明文件（例如 src/env.d.ts）来消除 TS 报错：
+Gemini 3 Pro (Preview) • 1x
+
+
+不需要下载。
+
+@/workers/hash.worker.js?worker 不是一个 npm 包，而是一个本地文件的引入路径，配合了 Vite 的特定语法。
+
+这里是详细的拆解：
+
+@: 这是路径别名（Alias），通常在 Vite 配置中指向你的 src 目录。
+/workers/hash.worker.js: 这是你需要手动创建的一个 JavaScript 文件。
+?worker: 这是 Vite 的内置语法。它告诉构建工具：“不要把这个文件打包进主 bundle，而是把它作为一个 Web Worker 脚本加载”。
+如何改造你的代码
+你需要做两件事：
+
+新建 Worker 文件（负责繁重的计算）。
+修改 getHashAndChunk.ts（负责调用 Worker）。
+第一步：新建 Worker 文件
+在 src 下新建 workers 文件夹，然后新建 hash.worker.js。
+
+import SparkMD5 from 'spark-md5';
+
+// 监听主线程发来的消息
+self.onmessage = (e) => {
+    const { fileChunkList } = e.data;
+    const spark = new SparkMD5.ArrayBuffer();
+    let percentage = 0;
+    let count = 0;
+
+    const loadNext = (index) => {
+        const reader = new FileReader();
+        // 读取分片中的 Blob
+        reader.readAsArrayBuffer(fileChunkList[index].chunkFile);
+        
+        reader.onload = (e) => {
+            count++;
+            spark.append(e.target.result);
+            
+            if (count === fileChunkList.length) {
+                // 全部计算完成
+                self.postMessage({
+                    percentage: 100,
+                    hash: spark.end()
+                });
+                self.close(); // 关闭 Worker
+            } else {
+                // 计算进度
+                percentage += 100 / fileChunkList.length;
+                self.postMessage({
+                    percentage
+                });
+                // 递归处理下一个
+                loadNext(count);
+            }
+        };
+    };
+
+    loadNext(0);
+};
+
+
+
+
+第二步：修改 getHashAndChunk.ts
+将原本在主线程进行的繁重计算逻辑移除，改为调用 Worker
+
+// @ts-ignore
+// 引入 Worker (注意：这里引入的是类，不是实例)
+import HashWorker from '@/workers/hash.worker.js?worker';
+
+export const getHashAndChunk = function(file: File, chunkSize = 1 * 1024 * 1024) {
+    return new Promise<{ fileHash: string; fileChunkList: Array<{ chunkFile: Blob }> }>((resolve, reject) => {
+        
+        // 1. 先在主线程进行切片 (切片操作很快，不耗时)
+        const chunkList: Array<{ chunkFile: Blob }> = [];
+        const chunkCount = Math.ceil(file.size / chunkSize);
+        
+        for (let i = 0; i < chunkCount; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, file.size);
+            chunkList.push({ chunkFile: file.slice(start, end) });
+        }
+
+        // 2. 实例化 Worker
+        const worker = new HashWorker();
+
+        // 3. 发送切片列表给 Worker
+        worker.postMessage({
+            fileChunkList: chunkList
+        });
+
+        // 4. 监听 Worker 返回的消息
+        worker.onmessage = (e) => {
+            const { percentage, hash } = e.data;
+            
+            // 如果有 hash，说明计算完成
+            if (hash) {
+                resolve({
+                    fileHash: hash,
+                    fileChunkList: chunkList
+                });
+                worker.terminate(); // 任务完成，销毁 Worker 实例
+            } else {
+                // 这里可以处理进度条逻辑，例如 console.log(`Hash进度: ${percentage}%`);
+            }
+        };
+
+        worker.onerror = (err) => {
+            reject(err);
+            worker.terminate();
+        };
+    });
+};
+
+
+
+
+
+
+
+这个问题是因为 TypeScript 默认不理解 .js 文件的导入，也不理解 Vite 特有的 ?worker 语法。
+
+你需要进行两步操作来完美解决这个问题：
+
+第一步：创建/修改类型声明文件
+在 src 目录下找到 vite-env.d.ts (如果没有就新建一个 src/env.d.ts)，添加以下代码。这会告诉 TypeScript：所有以 ?worker 结尾的导入，都是一个 Worker 构造函数。
+
+/// <reference types="vite/client" />
+
+// ...existing code...
+
+// 解决 worker 导入的类型报错
+declare module '*?worker' {
+    const workerConstructor: {
+        new (): Worker;
+    };
+    export default workerConstructor;
+}
+
+// 如果你确实需要直接导入 .js 文件而不加 ?worker (不推荐用于 Worker)，可以加上这个：
+declare module '*.js';
+
+第二步：修改引入代码
+在 useFileUpload.ts 中，你需要加上 ?worker 后缀。这不仅是为了匹配上面的类型声明，更是 Vite 识别并打包 Web Worker 的必要语法。如果不加这个后缀，Vite 会把它当作普通 JS 模块打包，导致运行报错。
+
+
+ 额外提示：检查是否有多余引用
+仔细看你的代码，你在 useFileUpload.ts 中引入了 HashWorker，但在下面的逻辑中，你实际上是调用了 getHashAndChunk 工具函数（该函数内部应该已经处理了 Worker 逻辑）。
+
+如果 useFileUpload.ts 内部没有直接写 new HashWorker()，建议直接删除这行 import，这样既代码更干净，也直接解决了报错。
+
+
+
+
+
+
+
+
+
+
+这个错误 SyntaxError: Missing initializer in const declaration 以及你遇到的逻辑问题，主要源于以下三个原因：
+
+文件类型不匹配：你的文件后缀是 .js，但代码里写了 TypeScript 的类型注解（如 : Array<{ chunkFile: Blob }>）。浏览器无法识别 TS 语法，解析 const 时出错。
+上下文错误：resolve 和 reject 是 Promise 的参数，但在 self.onmessage 这个事件回调里是不存在的。Worker 通过 postMessage 通信。
+异步逻辑混乱：FileReader 是基于回调（callback）的，loadNext 函数本身是同步触发读取，await loadNext() 是无效的，且 async 也是多余的。
+以下是修复后的代码，请直接替换 hash.worker.js 的内容：
+
+import SparkMD5 from 'spark-md5';
+
+// Worker 内部是纯 JS 环境，不能写 TS 类型注解
+self.onmessage = (e) => {
+    const { file, chunkSize } = e.data;
+    
+    // 1. 去掉 TS 类型注解
+    const chunkList = []; 
+    const chunkCount = Math.ceil(file.size / chunkSize);
+    const spark = new SparkMD5.ArrayBuffer();
+    const fileReader = new FileReader();
+    let currentChunk = 0;
+
+    // 读取每个分片
+    const loadNext = () => {
+        const start = currentChunk * chunkSize;
+        const end = Math.min(start + chunkSize, file.size);
+        const chunk = file.slice(start, end);
+        
+        // 保存分片
+        chunkList.push({ chunkFile: chunk });
+        
+        fileReader.readAsArrayBuffer(chunk);
+    };
+
+    fileReader.onload = (e) => {
+        if (e.target && e.target.result) {
+            // 2. 去掉 as ArrayBuffer 断言
+            spark.append(e.target.result); 
+            currentChunk++;
+
+            if (currentChunk < chunkCount) {
+                // 3. 递归调用，不需要 await
+                loadNext();
+            } else {
+                const fileHash = spark.end();
+                
+                // 4. 修复：这里没有 resolve，直接发送消息回主线程
+                // 注意：为了和主线程接收逻辑匹配，这里字段名最好保持一致
+                self.postMessage({ 
+                    fileHash, 
+                    fileChunkList: chunkList 
+                });
+                
+                // 任务完成，关闭 worker
+                self.close();
+            }
+        }
+    };
+
+    fileReader.onerror = () => {
+        // 5. 修复：这里没有 reject，发送错误消息
+        self.postMessage({ error: '文件读取失败' });
+    };
+
+    // 开始读取
+    loadNext();
+};
+
+
+排查与修改总结：
+删除类型注解：把 : Array<...> 和 as ArrayBuffer 删掉。如果想用 TS 写 Worker，需要把文件改为 .ts 后缀（Vite 支持），但 .js 文件里绝对不能出现 TS 语法。
+替换 resolve：Worker 不是 Promise，它通过 self.postMessage(data) 发送数据，主线程通过 worker.onmessage 接收。
+移除 async/await：FileReader 的 readAsArrayBuffer 方法是立即返回的（void），结果在 onload 回调中给出。在 loadNext 前面加 `
+await` 没有任何作用，反而会让代码逻辑看起来很奇怪。
+
+
+
+
+
+
+
+这个错误 The requested module ... does not provide an export named 'default' 的原因是：
+
+你现在的引入方式把它当成了普通的 JS 模块，但 Worker 文件里并没有 export default。
+
+在 Vite 中，必须加上 ?worker 后缀，Vite 才会自动生成一个包含 default export（即 Worker 构造函数）的包装模块。
+
+请严格按照以下两步修改，即可解决报错和类型提示问题：
+
+第一步：修改引入代码 (useFileUpload.ts)
+必须加上 ?worker 后缀。
+
+
+
+
+在 Axios 中，get 方法的第二个参数是 config 对象，而不是直接传数据。如果你想传查询参数（Query Parameters），应该放在 params 属性里。
+
+这是修正后的 checkFileApi：
+
+
+
+
+// ...existing code...
+export const checkFileApi = async (fileHash: string) => {
+    try {
+        // ✅ GET 请求传参要放在 params 对象中
+        // 最终请求 URL 会变成: /upload/check?fileHash=xxxx
+        const response = await uploadHttp.get('/upload/check', {
+            params: {
+                fileHash: fileHash
+            }
+        });
+        return response;
+    }
+    catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+
+
+
+
+
+
+这个错误是因为 uploadFile.fileName 的类型定义可能是 string | undefined，但 mergeChunkApi 的参数要求必须是 string。
+
+在你的代码中，uploadFile 是 UploadFile 类型，其 fileName 属性可能被定义为可选的（fileName?: string）。
+
+解决方法
+你可以使用空值合并运算符 ?? 或者类型断言 as string 来解决这个问题。
+
+在 useFileUpload.ts 的 mergeChunkApi 调用处修改：
+
+
+
+// ...existing code...
+            // 调用合并分片的 API
+            try {
+                const mergeResponse = await mergeChunkApi(
+                    { 'Content-Type': 'application/json' },
+                    {
+                        fileHash: uploadFile.fileHash,
+                        // ✅ 修复：如果 fileName 为 undefined，提供一个默认空字符串
+                        fileName: uploadFile.fileName ?? '', 
+                        // 确认一下后端是叫 fileNumber 还是 chunkCount ?
+                        fileNumber: uploadFile.allChunkList.length, 
+                    }
+                );
+// ...existing code...
+
+
+
+
+
+这里有两个主要的错误，分别在于请求数据的处理和响应数据的获取。
+
+通常在 Vue 项目中使用 uploadHttp (看起来像是 Axios 实例) 时，不需要手动序列化 JSON，也不需要调用 .json() 方法。
+
+❌ 你的代码存在的问题
+重复序列化 (JSON.stringify):
+Axios 默认会自动将 JavaScript 对象序列化为 JSON，并自动设置 Content-Type: application/json。如果你手动使用了 JSON.stringify，后端接收到的可能是一个字符串而不是对象，或者导致双重转义。
+错误的响应处理 (.json()):
+.json() 是原生 fetch API 的方法。Axios 返回的响应对象直接包含 data 属性。调用 .json() 会报错 mergeResponse.json is not a function。
+✅ 修正后的代码
+请使用以下代码替换原来的合并逻辑：
+
+
+
+
+
+// ...existing code...
+            // 调用合并分片的 API
+            try {
+                // 1. 直接传递对象，不要 JSON.stringify
+                // 2. Axios 会自动处理 Content-Type，通常不需要手动传 header，除非后端强制要求
+                const mergeResponse = await mergeChunkApi(
+                    { 'Content-Type': 'application/json' }, 
+                    {
+                        fileHash: uploadFile.fileHash,
+                        fileName: uploadFile.fileName,
+                        // 确认一下后端是叫 fileNumber 还是 chunkCount ?
+                        fileNumber: uploadFile.allChunkList.length, 
+                    }
+                );
+                
+                // 3. Axios 的返回值通常在 .data 中 (取决于你的拦截器配置)
+                // 如果你的 uploadHttp 拦截器已经返回了 response.data，这里直接用 mergeResponse 即可
+                const mergeResult = mergeResponse.data || mergeResponse; 
+                
+                if (mergeResult.code === 200) {
+// ...existing code...

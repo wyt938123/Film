@@ -140,7 +140,7 @@ router.post('/upload/merge', async (ctx) => {
     }
 });
 
-// 检查文件是否已上传
+// 检查文件是否已上传 -秒传
 router.post('/upload/check', async (ctx) => {
     try {
         const { fileHash, fileName } = ctx.request.body;

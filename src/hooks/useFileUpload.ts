@@ -3,7 +3,10 @@
 // 处理文件上传 选定好文件触发的逻辑      ---- 这里包括点击逻辑吗
 import type {ChunkItem, UploadFile} from '@/types/file';
 import { getHashAndChunk } from '@/utils/getHashAndChunk';
-//这里是建议传响应式式数据还是 .value呢
+//vite-env.d.ts (解决 worker 报错问题)
+import HashWorker from '@/workers/hash.worker.js?worker';//这里是建议传响应式式数据还是 .value呢
+import { uploadChunkApi , mergeChunkApi ,checkFileApi} from '@/api/UploadApi/API';
+
 const uploadFiles = async function(files:FileList , uploadFileList: {value: Array<UploadFile>},chunkSize=1 * 1024 * 1024) {
 //FileList 是"类数组/可迭代对象"  for of
     Array.from(files).forEach(async (element, i) => {
@@ -29,8 +32,21 @@ const uploadFiles = async function(files:FileList , uploadFileList: {value: Arra
             return;
         }
         // 计算切片
-        const { fileHash, fileChunkList } = await getHashAndChunk(file , chunkSize=1 * 1024 * 1024);
-        console.log('fileHahs,fileChunkListok', fileHash);
+        // const HashWorkerInstance = new HashWorker();
+        // HashWorkerInstance.postMessage({ file, chunkSize });
+
+        const { fileHash, fileChunkList } = await getHashAndChunkWorker(file , chunkSize);
+
+        const checkResult = await checkFileApi(fileHash ,file.name);
+        if(checkResult.data?.code === 200 && checkResult.data?.data?.exists) {
+            // 文件已存在，直接标记为完成
+            inTackArrItem.state = 3; // 上传完
+            uploadFileList.value.splice(i, 1);
+            console.log('文件已存在，跳过上传:', file.name);
+            return;
+        }
+        // const { fileHash, fileChunkList } = await getHashAndChunk(file , chunkSize=1 * 1024 * 1024);
+        // console.log('fileHahs,fileChunkListok', fileHash);
 
         //拿到文件名-- // 这里要注意！可能同一个文件，是复制出来的，出现文件名不同但是内容相同，导致获取到的hash值也是相同的
         // 所以文件hash要特殊处理         比如 a.txt  b.txt  内容相同  hash值相同
@@ -73,7 +89,16 @@ const uploadFiles = async function(files:FileList , uploadFileList: {value: Arra
     });
 }
 
-
+function getHashAndChunkWorker(file: File , chunkSize = 1 * 1024 * 1024): Promise<{ fileHash: string; fileChunkList: Array<{ chunkFile: Blob }> }> {
+    return new Promise((resolve, reject) => {
+        const worker = new HashWorker();
+        worker.postMessage({ file, chunkSize });
+        worker.onmessage = (e: MessageEvent<{ fileHash: string; fileChunkList: Array<{ chunkFile: Blob }> }>) => {
+            resolve(e.data);
+            worker.terminate();
+        }
+    });
+}
 
 const uploadSignleFile = async function(uploadFile: UploadFile, uploadFileList: {value: Array<UploadFile>}) {
     console.log('开始上传文件', uploadFile);
@@ -105,14 +130,11 @@ const uploadSignleFile = async function(uploadFile: UploadFile, uploadFileList: 
             formData.append('chunkNumber', chunk.chunkNumber.toString());
 
             // 调用后端上传接口
-            const response = await fetch('http://localhost:3000/upload/chunk', {
-                method: 'POST',
-                body: formData
+            const response = await uploadChunkApi(formData);
                 //// ❌ 注意：不要手动设置 Content-Type！浏览器会自动添加正确的 multipart/form-data 及边界符
                  // "Content-Type": "multipart/form-data" // 错误写法
-            });
             
-            const result = await response.json();
+            const result = await response.data || response;
             
             if (result.code !== 200) {
                 throw new Error(result.message || '上传失败');
@@ -159,6 +181,7 @@ const uploadSignleFile = async function(uploadFile: UploadFile, uploadFileList: 
         }
         
         // 等待所有任务完成
+        //!!!!!!!!!!!!!!!!!!!很重要
         await Promise.all(tasks);
         
         // 检查是否所有分片都上传成功
@@ -173,19 +196,20 @@ const uploadSignleFile = async function(uploadFile: UploadFile, uploadFileList: 
             
             // 调用合并分片的 API
             try {
-                const mergeResponse = await fetch('http://localhost:3000/upload/merge', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
+                const mergeResponse = await mergeChunkApi(
+                    { 'Content-Type': 'application/json' },
+                    {
                         fileHash: uploadFile.fileHash,
-                        fileName: uploadFile.fileName,
-                        chunkNumber: allChunkList.length
-                    })
-                });
+                        //为什么为name为null
+                        fileName: uploadFile.fileName ?? "",
+                        // 确认一下后端是叫 fileNumber 还是 chunkCount ?
+                        fileNumber: uploadFile.allChunkList.length, 
+                    }
+                );
                 
-                const mergeResult = await mergeResponse.json();
+                // 3. Axios 的返回值通常在 .data 中 (取决于你的拦截器配置)
+                // 如果你的 uploadHttp 拦截器已经返回了 response.data，这里直接用 mergeResponse 即可
+                const mergeResult = mergeResponse.data || mergeResponse; 
                 
                 if (mergeResult.code === 200) {
                     uploadItem.state = 3; // 上传完成

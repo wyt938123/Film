@@ -48,7 +48,7 @@ const handleFileChange = (event: Event) => {
     }
 };
 
-// 暴露给父组件的方法，也可以内部直接使用
+// 暴露给父组件的方法，也可以内部直接使用       --点击区域后付出发文件的点击事件
 const triggerClick = () => {
     fileInput.value?.click();
 };

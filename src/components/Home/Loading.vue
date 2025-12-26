@@ -9,16 +9,22 @@
             <!-- .content-item 对应 Tailwind 样式 -->
 
         </div>
-        <div :style="{ transform: getTransform ,columnCount: props.cols ?? 1 ,gap: props.gap ?? 0 }" class="absolute left-0 top-0 w-full bg-yellow">
+        <div :style="{ transform: getTransform, columnCount: props.cols ?? 1, gap: props.gap ?? 0 }"
+            class="absolute left-0 top-0 w-full bg-yellow">
             <div v-for="item in visibleData" :key="item.index" ref="itemRefs" :id="String(item.index)"
                 class="box-border border border-[#ddd] text-center text-[#333]">
                 <!-- {{ item.img }} ✅ 显示文字内容 -->
                 <!-- <img :src="item.img" class="h-[100px] w-full object-cover block" /> -->
-                <img v-lazy="item.img" alt="" class="h-[400px] w-full object-cover block" />
+                <slot name="item" :item="item"></slot>
             </div>
         </div>
         <!-- 加载状态提示 应该是利用插槽传入-->
-        <div v-if="loading" class="py-4 text-center">加载中...</div>
+        <div class="py-4 text-center">
+            <slot name="loading" v-if="loading">
+                <!-- 默认加载样式 -->
+                <div class="text-gray-500">加载中...</div>
+            </slot>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
@@ -47,11 +53,7 @@ const emit = defineEmits<{
 
 const buffer = props.buffer ?? 5;
 
-const loading = ref(props.loading);
 
-watch(() => props.loading, (newVal) => {
-    loading.value = newVal;
-});
 
 
 
@@ -180,14 +182,15 @@ function getStartIndex(scrollTop: number): number {
 //用来更新 visibleInfo 信息的 ---》影响 visibleData ---》dom更新（渲染关系）
 
 
+// const loading = props.loading;  ---props 才是响应式数据，prosp.loading 不是
 
 // 新增一个本地锁，用于解决 props 异步更新的时间差问题
+//保证成功为 true 或者 false 之后，才能再次触发加载更多
 const isEmitting = ref(false);
-let emitTimer: number | null = null;
+// let emitTimer: number | null = null;
 
 watch(() => props.loading, (newVal) => {
-    loading.value = newVal;
-    // 当 loading 变为 false (请求结束) 时，解开本地锁
+    // 当 loading 变为 false 时，就是没有加载时，解锁
     if (!newVal) {
         isEmitting.value = false;
     }
@@ -197,7 +200,8 @@ watch(() => props.loading, (newVal) => {
 
 
 
-
+// !!!!!!!!!!!!!!!
+//其实只用本地锁判断就可以了 
 
 
 function handleWindowScroll() {
@@ -221,40 +225,47 @@ function handleWindowScroll() {
     // 触底加载检测
     // if (!containerRef.value || loading.value) return;
     // if (scrollTop > window.innerHeight) {
-        //只有在顶部时才触发加载更多
-        // const scrollHeight = containerRef.value.scrollHeight;
-        // const clientHeight = containerRef.value.clientHeight;
-        // const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+    //只有在顶部时才触发加载更多
+    // const scrollHeight = containerRef.value.scrollHeight;
+    // const clientHeight = containerRef.value.clientHeight;
+    // const distanceToBottom = scrollHeight - scrollTop - clientHeight;
 
-        // / ✅ 2. 只有触底加载时才检查锁 -- 不能
+    // / ✅ 2. 只有触底加载时才检查锁 -- 不能
     // 如果正在加载或刚触发过emit，跳过触底检测，但不影响上面的滚动计算
-    if (loading.value || isEmitting.value) return;
+
+    //正在加载或者上锁了，就不触发加载更多
+    if (props.loading || isEmitting.value) return;
 
 
-        const distanceToBottom = containerRef.value.getBoundingClientRect().bottom - window.innerHeight;
-        console.log('distanceToBottom', distanceToBottom);
+    const distanceToBottom = containerRef.value.getBoundingClientRect().bottom - window.innerHeight;
+    console.log('distanceToBottom', distanceToBottom);
 
-        // 距离底部小于100px时触发加载
-         if (distanceToBottom < 200) {
+    // 距离底部小于100px时触发加载
+    if (distanceToBottom < 200) {
         console.log('触发加载更多');
-        
+
         // 立即上锁
         isEmitting.value = true;
-        emit('getMoreData');
-        
-        // ✅ 添加超时解锁（兜底保护）
-        // 如果 3 秒后 props.loading 还没变化，强制解锁
-        emitTimer = window.setTimeout(() => {
-            if (isEmitting.value) {
-                console.log('超时解锁（props.loading 未更新）');
-                isEmitting.value = false;
-            }
-        }, 3000);
+
+
     }
+    //关键在于loading的修改权限在父组件
+    // 导致会出现重复触发的问题
+    //加载框也只是告知在加载的工具
+    emit('getMoreData');
+
+    // ✅ 添加超时解锁（兜底保护）
+    // 如果 3 秒后 props.loading 还没变化，强制解锁
+    window.setTimeout(() => {
+        if (isEmitting.value) {
+            console.log('超时解锁（props.loading 未更新）');
+            isEmitting.value = false;
+        }
+    }, 3000);
+}
 
     // }
 
-}
 
 
 // function ScrollEvent(e: Event) {
@@ -305,7 +316,7 @@ onUpdated(() => {
         }
     });
     //更新 phantomHeight
-    phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom/ (props.cols ?? 1);
+    phantomHeight.value = itemPositions.value[itemPositions.value.length - 1].bottom / (props.cols ?? 1);
     //  getScrollTop();
 })
 
