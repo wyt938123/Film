@@ -16,13 +16,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 // 负责模板，部分逻辑
+// 拿到了触发了事件，拿到了事件对象，也是要将事件对象传递出去
+//逻辑交给父组件处理
 
 interface Props {
     accept?: string;
     multiple?: boolean;
     title?: string;
 }
-
+// 设置默认值
 const props = withDefaults(defineProps<Props>(), {
     accept: "",
     multiple: true,
@@ -48,7 +50,8 @@ const handleFileChange = (event: Event) => {
     }
 };
 
-// 暴露给父组件的方法，也可以内部直接使用       --点击区域后付出发文件的点击事件
+// 暴露给父组件的方法，也可以内部直接使用
+//这个方法触发后，会触发 input 的点击事件-然后才可以进入上传，使用input按钮隐藏也没事
 const triggerClick = () => {
     fileInput.value?.click();
 };

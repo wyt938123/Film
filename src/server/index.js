@@ -141,15 +141,20 @@ router.post('/upload/merge', async (ctx) => {
 });
 
 // 检查文件是否已上传 -秒传
-router.post('/upload/check', async (ctx) => {
+router.get('/upload/check', async (ctx) => {
     try {
-        const { fileHash, fileName } = ctx.request.body;
-        
+        // const { fileHash, fileName } = ctx.request.body;
+        //get没有body
+          // GET 参数来自查询串
+        const { fileHash, fileName } = ctx.query;
+        console.log('检查文件:', fileHash, fileName);
         // 检查文件是否已存在
         const filePath = path.resolve(MERGE_DIR, fileName);
         const fileExists = await fs.pathExists(filePath);
+        console.log('文件存在状态:', fileExists, filePath);
         
         if (fileExists) {
+            console.log('文件已存在:', fileName);
             ctx.body = {
                 code: 200,
                 message: '文件已存在',
@@ -160,16 +165,20 @@ router.post('/upload/check', async (ctx) => {
 
         // 检查已上传的分片
         const chunkDir = path.resolve(UPLOAD_DIR, fileHash);
+        console.log('检查分片目录:', chunkDir);
         const chunkExists = await fs.pathExists(chunkDir);
         
         if (chunkExists) {
             const uploadedChunks = await fs.readdir(chunkDir);
+            const uploadedIndexes = uploadedChunks.map(chunk => chunk.split('-').pop());
+            console.log('已上传分片索引:', uploadedIndexes);
+            //读取的是完整的切片信息
             ctx.body = {
                 code: 200,
                 message: '部分分片已上传',
                 data: { 
                     uploaded: false, 
-                    uploadedChunks: uploadedChunks.map(chunk => chunk.split('-').pop())
+                    uploadedChunks: uploadedIndexes
                 }
             };
         } else {

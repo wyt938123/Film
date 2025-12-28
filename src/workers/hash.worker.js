@@ -30,7 +30,7 @@ self.onmessage =  (e) => {
         fileReader.onload = (e) => {
             //e是成功读取的二进制数据的事件对象        ----currentChunk>=chunkCount 终止条件
             //成功读取到了结果后
-            console.log(e,'读取分片结果对象');
+            // console.log(e,'读取分片结果对象');
             if (e.target?.result) {
                 // 追加到 MD5 计算
                 spark.append(e.target.result ); //成功读取到的结果是 ArrayBuffer 类型 

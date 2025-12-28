@@ -17,7 +17,8 @@ export enum UploadState {
     PARSING = 1,
     UPLOADING = 2,
     SUCCESS = 3,
-    FAILURE = 4
+    FAILURE = 4,
+    STOPPED = 5,
 }
 
 export interface UploadFile {

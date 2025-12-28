@@ -1,8 +1,8 @@
 import uploadHttp from "../upload";
 
-export const uploadChunkApi = async (data: any) => {
+export const uploadChunkApi = async (data: any, signal?: AbortSignal) => {
     try {
-        const response = await uploadHttp.post('/upload/chunk', data)
+        const response = await uploadHttp.post('/upload/chunk', data, { signal });
         return response;
     }
     catch (error) {
