@@ -10,14 +10,21 @@
               text-lg w-[6rem] text-center font-serif mr-5 bg-gray-200 rounded-full bg-opacity-50">
                 影视影音
             </div>
-            <van-search v-model="searchField" show-action placeholder="请输入搜索关键词" shape="round" background="transparent"
-                class="w-full">
-                <template #action>
-                    <div class="text-white justify-center items-center flex">
-                        <van-icon name="tv-o" size="1.25rem" />
-                    </div>
-                </template>
-            </van-search>
+            <!-- 搜索框 -->
+            <div>
+                <MySearch v-model="searchField" show-action placeholder="请输入搜索关键词" shape="round"
+                    background="transparent" class="w-full">
+                    <template #action>
+                        <div class="text-white justify-center items-center flex">
+                            <van-icon name="tv-o" size="1.25rem" />
+                        </div>
+                    </template>
+                </MySearch>
+            </div>
+            <div class="w-3xs ml-4 text-white h-10">
+                {{ searchField }}
+            </div>
+
         </div>
         <!-- 主体 -->
         <main class="flex flex-col space-y-4">
@@ -86,10 +93,10 @@ import { storeToRefs } from 'pinia';
 import { useHomeStore } from '@/stores/homeStore';
 import PopularVideosCard from '@/components/Home/PopularVideosCard.vue';
 import CommonVideosCard from '@/components/Home/CommonVideosCardccopy.vue';
-
-
-const searchField = ref('')
+import MySearch from '@/components/Home/MySearch.vue';
+const searchField = ref('12313')
 const homeStore = useHomeStore()
+const getcahnge = ref('')
 const { topBarState, popularVideosState, commonVideosState } = storeToRefs(homeStore)
 
 const showPicker = ref(false);
