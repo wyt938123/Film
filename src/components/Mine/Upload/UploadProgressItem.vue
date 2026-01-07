@@ -36,7 +36,7 @@
             继续
         </van-button>
         {{ stopUploadtrest }}
-        {{  }}
+        {{ }}
     </div>
 </template>
 

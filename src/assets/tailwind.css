@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+/* PostCSS 只支持 注释格式，不支持 // 单行注释（那是 Sass/SCSS 的语法） */
 
 /* 快速开发：
 
@@ -10,3 +11,81 @@
 响应式设计：
 
 提供响应式类名（如 sm:、md:、lg:），方便实现响应式布局。 */
+
+/*   4的语法
+@utility  film-buttom {
+
+} */
+
+/* 组合工具类  -- 复用 */
+.film-btn2 {
+  @apply h-3 w-6 rounded-2xl bg-[#fb6124] text-red-600;
+}
+
+/* 自定义按钮工具类 - 支持任意颜色 */
+@layer utilities {
+  /* 基础按钮样式 */
+  .film-btn {
+    @apply h-10 rounded-lg px-4 py-2 font-medium transition-all duration-200 hover:opacity-80 active:scale-95;
+  }
+
+  /* 预定义颜色按钮 */
+  .film-btn-primary {
+    @apply film-btn bg-[#fb6124] text-white;
+  }
+
+  .film-btn-pink {
+    @apply film-btn bg-[#fb2481] text-white;
+  }
+
+  .film-btn-blue {
+    @apply film-btn bg-blue-500 text-white;
+  }
+
+  /* 小尺寸按钮 */
+  .film-btn-sm {
+    @apply h-8 px-3 py-1 text-sm;
+  }
+
+  /* 大尺寸按钮 */
+  .film-btn-lg {
+    @apply h-12 px-6 py-3 text-lg;
+  }
+}
+
+/* @utility 是 Tailwind CSS v4（alpha）的新特性，你当前使用的是 v3.4.17，不支持这个语法。
+
+在 Tailwind v3 中，需要使用 @layer + @apply 或在 tailwind.config.js 中配置。 */
+
+/* 自定义输入框工具类 */
+@layer components {
+  /* 基础输入框样式 */
+  .film-input {
+    @apply w-full rounded-lg border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-[#fb6124] focus:outline-none focus:ring-2 focus:ring-[#fb6124] focus:ring-opacity-20;
+  }
+
+  /* 错误状态 */
+  .film-input-error {
+    @apply film-input border-red-500 focus:border-red-500 focus:ring-red-500;
+  }
+
+  /* 成功状态 */
+  .film-input-success {
+    @apply film-input border-green-500 focus:border-green-500 focus:ring-green-500;
+  }
+
+  /* 禁用状态 */
+  .film-input-disabled {
+    @apply film-input cursor-not-allowed bg-gray-100 opacity-60;
+  }
+
+  /* 小尺寸 */
+  .film-input-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+
+  /* 大尺寸 */
+  .film-input-lg {
+    @apply px-5 py-3 text-lg;
+  }
+}
