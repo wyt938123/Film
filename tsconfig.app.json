@@ -16,3 +16,10 @@
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/workers/hash.worker.js"]
 }
+
+// * 匹配0或多个字符（不包括目录分隔符）
+// ? 匹配一个任意字符（不包括目录分隔符）
+// **/ 递归匹配任意子目录
+
+//详细配置解释
+// https://www.tslang.cn/docs/handbook/tsconfig-json.html

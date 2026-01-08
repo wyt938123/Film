@@ -1,3 +1,6 @@
+//https://www.tslang.cn/docs/handbook/tsconfig-json.html
+
+
 {
   "files": [],
   "references": [
