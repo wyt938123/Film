@@ -6,9 +6,12 @@
         <input type="file" ref="fileInput" @change="handleFileChange" :accept="accept" :multiple="multiple"
             style="display: none" />
 
-        <div class="flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center justify-center ">
             <van-icon name="upgrade" size="50" color="#c0c4cc" />
             <p class="mt-4 text-gray-500">{{ title }}</p>
+        </div>
+        <div class="">
+
         </div>
     </div>
 </template>
