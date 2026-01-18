@@ -3,7 +3,8 @@
         <Loading :item-date="props.items" :buffer="5" :loading="loading" @getMoreData="addData" :gap="20" :cols="2">
             <template #item="{ item }">
                 <div class="card">
-                    <img v-lazy="item.img" alt="" class="block h-[400px] w-full object-cover" />
+                    <img v-lazy="item.img" alt="" class="block h-[400px] w-full object-cover"
+                        @click="() => router.push(`/VideoDetail`)" />
                 </div>
             </template>
             <template #loading>
@@ -18,6 +19,8 @@
 import { ref } from "vue";
 import Loading from "./Loading.vue";
 import type { CommonVideosItem } from "@/types/home";
+import { useRouter } from "vue-router";
+const router = useRouter()
 
 //接口定义类型约束
 interface Props {

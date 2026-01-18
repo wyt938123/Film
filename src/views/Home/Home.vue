@@ -74,7 +74,7 @@
                 <div class="flex justify-between items-center px-6 text-sm text-white">
                     <h2 class="title font-bold text-lg">海量好剧</h2>
                 </div>
-                <CommonVideosCard :items="commonVideosState"></CommonVideosCard>
+                <CommonVideosCardccopy :items="commonVideosState"></CommonVideosCardccopy>
             </section>
         </main>
 
@@ -93,7 +93,7 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia';
 import { useHomeStore } from '@/stores/homeStore';
 import PopularVideosCard from '@/components/Home/PopularVideosCard.vue';
-import CommonVideosCard from '@/components/Home/CommonVideosCardccopy.vue';
+import CommonVideosCardccopy from '@/components/Home/CommonVideosCardccopy.vue';
 import MySearch from '@/components/Home/MySearch.vue';
 const searchField = ref('12313')
 const homeStore = useHomeStore()

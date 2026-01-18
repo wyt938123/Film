@@ -89,3 +89,19 @@
     @apply px-5 py-3 text-lg;
   }
 }
+
+/*自定义工具类然后在html上添加 ，taliwend可能不扫描到html文件去*/
+@layer base {
+  /* 全局强制隐藏所有滚动条，同时保持滚动功能 */
+  html,
+  body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}
