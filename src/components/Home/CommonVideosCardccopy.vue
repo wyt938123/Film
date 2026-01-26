@@ -4,7 +4,7 @@
             <template #item="{ item }">
                 <div class="card">
                     <img v-lazy="item.img" alt="" class="block h-[400px] w-full object-cover"
-                        @click="() => router.push(`/VideoDetail`)" />
+                        @click="() => router.push(`/VideoDetail/1/detail`)" />
                 </div>
             </template>
             <template #loading>

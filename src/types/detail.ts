@@ -1,6 +1,6 @@
 export type TopBarItem = {
-  title: string;
-  icon: string;
+  key:string
+  label:string
 };
 
 export type VideoMainInfo = {

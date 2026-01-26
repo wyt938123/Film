@@ -46,15 +46,41 @@ const rootRoutes: RouteRecordRaw[] = [
   },
 ];
 
+const detailRoutes: RouteRecordRaw[] = [
+  {
+    path: "detail", // 去掉前面的 /，使其相对于父级路径
+    name: "VideoDetailContent",
+    meta: {
+      title: "详情",
+      cache: false,
+    },
+    component: () => import("@/views/Detailview/MianInfo.vue"),
+  },
+  // {
+  //   path: "ugc",
+  //   name: "VideoUGC",
+  //   meta: { title: "二创", cache: false },
+  //   component: () => import("@/views/Detailview/UGC.vue"), // 假设你有这些组件
+  // },
+  // {
+  //   path: "comments",
+  //   name: "VideoComments",
+  //   meta: { title: "讨论", cache: false },
+  //   component: () => import("@/views/Detailview/Comments.vue"),
+  // }
+];
+
 const videoRoutes: RouteRecordRaw[] = [
   {
-    path: "/videoDetail",
+    path: "/videoDetail/:id", /// // 核心：使用 :id 动态参数
     name: "VideoDetail",
     meta: {
       title: "视频详情",
       cache: false,
     },
     component: () => import("@/views/videoDetail.vue"),
+    children: [...detailRoutes],
+    redirect: (to) => `/video/${to.params.id}/detail`, // 自动补全路径-跳转二级路由
   },
 ];
 
