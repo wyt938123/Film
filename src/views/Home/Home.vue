@@ -122,7 +122,30 @@ const onConfirm = (value: string) => {
     showPicker.value = false;
 }
 
+//传入的参数必须是一个包含 label 属性、且该属性值为字符串类型的对象。
+function printLabel(labelledObj: { label: string }) {
+  console.log(labelledObj.label);
+}
 
+let myObj = { size: 10, label: "Size 10 Object" };
+printLabel(myObj);
+
+
+
+interface SquareConfig {
+    color?: string;
+    width?: number;
+    [propName: string]: any;
+}
+
+function createSquare(config: SquareConfig)  {
+    // ...
+}
+// 额外的属性检查 - 字面量 -- 非声明式
+let mySquare = createSquare({ colour: "red", width: 100 } as SquareConfig);
+
+let a = 1
+console.log(a)
 </script>
 
 <style scoped></style>
